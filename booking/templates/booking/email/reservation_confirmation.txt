@@ -1,0 +1,20 @@
+¡Tu reserva ha sido confirmada!
+
+Hola {{ reserva.nombre }},
+
+Gracias por reservar con nosotros. Aquí están los detalles de tu reserva:
+
+Nombre: {{ reserva.nombre }}
+Correo: {{ reserva.correo }}
+Teléfono: {{ reserva.telefono }}
+Dirección: {{ reserva.direccion }}
+Fecha: {{ reserva.fecha|date:"d \d\e F \d\e Y" }}
+Días: {{ reserva.dias }}
+Total: ${{ reserva.total }}
+
+Si tienes alguna duda, puedes contactarnos por WhatsApp: https://wa.link/8jz8b1
+
+¡Esperamos verte pronto!
+
+Saludos,
+El equipo de Spa Confort

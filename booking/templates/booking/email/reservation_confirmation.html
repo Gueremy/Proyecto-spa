@@ -1,0 +1,34 @@
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Confirmación de Reserva</title>
+    <style>
+        body { font-family: sans-serif; color: #333; }
+        .container { padding: 20px; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 5px; }
+        h1 { color: #22c55e; }
+        ul { list-style-type: none; padding: 0; }
+        li { margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>¡Tu reserva ha sido confirmada!</h1>
+        <p>Hola {{ reserva.nombre }},</p>
+        <p>Gracias por reservar con nosotros. Aquí están los detalles de tu reserva:</p>
+        <ul>
+            <li><strong>Nombre:</strong> {{ reserva.nombre }}</li>
+            <li><strong>Correo:</strong> {{ reserva.correo }}</li>
+            <li><strong>Teléfono:</strong> {{ reserva.telefono }}</li>
+            <li><strong>Dirección:</strong> {{ reserva.direccion }}</li>
+            <li><strong>Fecha:</strong> {{ reserva.fecha|date:"d \d\e F \d\e Y" }}</li>
+            <li><strong>Días:</strong> {{ reserva.dias }}</li>
+            <li><strong>Total:</strong> ${{ reserva.total|intcomma }}</li>
+        </ul>
+        <p>Si tienes alguna duda, puedes contactarnos por <a href="https://wa.link/8jz8b1">WhatsApp</a>.</p>
+        <p>¡Esperamos verte pronto!</p>
+        <p>Saludos,<br>El equipo de Spa Confort</p>
+    </div>
+</body>
+</html>

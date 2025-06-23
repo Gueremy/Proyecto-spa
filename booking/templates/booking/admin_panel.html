@@ -1,0 +1,202 @@
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Panel de Administración</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #f9fafb; color: #333; margin: 0; } /* Removed padding and max-width/margin-auto */
+    h1 { font-weight: 600; font-size: 1.5rem; margin-bottom: 24px; border-bottom: 1px solid #e5e7eb; padding-bottom: 12px; color: #111827; }
+    .user-card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px rgb(0 0 0 / 0.05); display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px;}
+    .user-card header { display: flex; justify-content: space-between; align-items: center; }
+    .user-card h2 { margin: 0; font-weight: 700; font-size: 1.25rem; }
+    .status-paid { background-color: #dcfce7; color: #22c55e; padding: 4px 12px; border-radius: 9999px; font-size: 0.875rem; font-weight: 600; }
+    .status-unpaid { background-color: #fee2e2; color: #b91c1c; padding: 4px 12px; border-radius: 9999px; font-size: 0.875rem; font-weight: 600; }
+    .user-info { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; color: #4b5563; font-size: 1rem; }
+    .user-info li { display: flex; align-items: center; gap: 8px; }
+    .material-icons { font-size: 20px; color: #6b7280; }
+    .actions { display: flex; gap: 16px; margin-top: 12px; }
+    .btn { display: flex; align-items: center; gap: 6px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; padding: 10px 16px; font-size: 1rem; transition: background-color 0.3s ease; text-decoration: none;}
+    .edit-btn { background-color: #bfdbfe; color: #2563eb; }
+    .edit-btn:hover { background-color: #93c5fd; }
+    .delete-btn { background-color: #fecaca; color: #b91c1c; }
+    .delete-btn:hover { background-color: #fca5a5; }
+    /* Custom styles for layout */
+    .main-content {
+        flex-grow: 1; /* Allows it to take up available space */
+        max-width: 768px; /* Max width for central content */
+        margin: 32px auto; /* Center it with vertical margin */
+        padding: 0 16px; /* Horizontal padding */
+    }
+    .sidebar {
+        width: 320px; /* Fixed width for the sidebar */
+        flex-shrink: 0; /* Prevent shrinking */
+        padding: 32px 16px; /* Padding for the sidebar content */
+        background-color: #f3f4f6; /* Light background for sidebar */
+        border-left: 1px solid #e5e7eb; /* Separator line */
+    }
+    @media (max-width: 1024px) { /* Adjust for smaller screens */
+        body { flex-direction: column; } /* Stack content vertically */
+        .main-content { margin: 16px auto; }
+        .sidebar { width: 100%; border-left: none; border-top: 1px solid #e5e7eb; padding: 16px; }
+    }
+    </style>
+</head>
+<body class="flex flex-col lg:flex-row"> {# Use flexbox for layout, column on small screens, row on large #}
+    <div class="main-content"> {# Main content wrapper #}
+    <h1 class="text-center">Panel de Administración</h1>
+    
+    <!-- Formulario de Filtros -->
+    <form method="GET" class="bg-white p-4 rounded-lg shadow-md mb-6">
+        <h3 class="text-lg font-semibold mb-2">Filtrar Reservas</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label for="fecha_desde" class="block text-sm font-medium text-gray-700">Desde</label>
+                <input type="date" name="fecha_desde" id="fecha_desde" value="{{ request.GET.fecha_desde|default:'' }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+            </div>
+            <div>
+                <label for="fecha_hasta" class="block text-sm font-medium text-gray-700">Hasta</label>
+                <input type="date" name="fecha_hasta" id="fecha_hasta" value="{{ request.GET.fecha_hasta|default:'' }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+            </div>
+            <div>
+                <label for="pagado" class="block text-sm font-medium text-gray-700">Estado de Pago</label>
+                <select name="pagado" id="pagado" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                    <option value="" {% if not request.GET.pagado %}selected{% endif %}>Todos</option>
+                    <option value="true" {% if request.GET.pagado == 'true' %}selected{% endif %}>Pagado</option>
+                    <option value="false" {% if request.GET.pagado == 'false' %}selected{% endif %}>Pendiente</option>
+                </select>
+            </div>
+        </div>
+        <div class="mt-4 flex justify-end gap-2">
+            <a href="{% url 'admin_panel' %}" class="py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">Limpiar</a>
+            <button type="submit" class="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">Filtrar</button>
+        </div>
+    </form>
+
+    <!-- Formulario para Exportar y Listar Reservas -->
+    <form method="POST">
+        {% csrf_token %}
+        <div class="flex justify-center gap-4 mb-6">
+            <button type="submit" formaction="{% url 'export_reservas_excel' %}?{{ request.GET.urlencode }}" class="bg-green-600 text-white font-bold py-2 px-4 rounded hover:bg-green-700 transition-colors no-underline">
+                Exportar a Excel
+            </button>
+            <button type="submit" formaction="{% url 'export_reservas_pdf' %}?{{ request.GET.urlencode }}" class="bg-red-600 text-white font-bold py-2 px-4 rounded hover:bg-red-700 transition-colors no-underline">
+                Exportar a PDF
+            </button>
+        </div>
+
+        {% for reserva in reservas %}
+            <section class="user-card relative">
+                <input type="checkbox" name="selected_ids" value="{{ reserva.id }}" class="absolute top-4 right-4 h-5 w-5">
+                <header>
+                    <div> <h2>{{ reserva.nombre }}</h2>
+                        <div class="reservation-id">
+                            <span class="material-icons" style="font-size: 12px;">receipt_long</span>
+                            RESERVA: {{ reserva.numero_reserva }}
+                        </div>
+                    </div>
+                    
+                    {% if reserva.pagado %}
+                        <span class="status-paid">Pagado</span>
+                    {% else %}
+                        <span class="status-unpaid">Pendiente</span>
+                    {% endif %}
+                </header>
+                <ul class="user-info">
+                    <li><span class="material-icons">calendar_today</span> {{ reserva.fecha|date:"d \d\e F \d\e Y" }}</li>
+                    <li><span class="material-icons">email</span> {{ reserva.correo }}</li>
+                    <li><span class="material-icons">phone</span> {{ reserva.telefono }}</li>
+                    <li><span class="material-icons">location_on</span> {{ reserva.direccion }}</li>
+                    <li>
+                        <span class="material-icons">home</span>
+                        Espacio techado:
+                        <span style="font-weight:600; color:{{ reserva.espacio_techado|yesno:'#22c55e,#b91c1c' }}">
+                            {{ reserva.espacio_techado|yesno:"Sí,No" }}
+                        </span>
+                    </li>
+                    <li>
+                        <span class="material-icons">event</span>
+                        Días: <span style="font-weight:600;">{{ reserva.dias }}</span>
+                    </li>
+                    <li>
+                       <span class="material-icons">attach_money</span>
+                       Total:
+                       <span style="font-weight:600;">
+                           ${{ reserva.total|intcomma }}
+                      </span>
+                    </li>
+                    
+                </ul>
+                <footer class="actions">
+                    <a href="{% url 'editar_reserva' reserva.id %}" class="btn edit-btn">
+                        <span class="material-icons">edit</span> Editar
+                    </a>
+                    <a href="{% url 'eliminar_reserva' reserva.id %}" class="btn delete-btn">
+                        <span class="material-icons">delete</span> Eliminar
+                    </a>
+                </footer>
+            </section>
+        {% empty %}
+            <p class="text-center text-gray-500 mt-8">No se encontraron reservas con los filtros aplicados.</p>
+        {% endfor %}
+    </form>
+    </div>
+
+    <aside class="sidebar bg-white p-6 rounded-lg shadow-md"> {# Sidebar wrapper #}
+        <section class="mb-8">
+            <h2 class="text-xl font-bold mb-4">Días Feriados</h2>
+            <form method="post" action="{% url 'agregar_feriado' %}" class="mb-4 flex flex-col space-y-2">
+                {% csrf_token %}
+                <input type="date" name="fecha" required class="border rounded px-2 py-1">
+                <input type="text" name="descripcion" placeholder="Descripción (opcional)" class="border rounded px-2 py-1">
+                <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors">Agregar Feriado</button>
+            </form>
+
+            <ul>
+                {% for feriado in dias_feriados %}
+                    <li class="flex items-center justify-between mb-2 p-2 bg-gray-50 rounded">
+                        <span>{{ feriado.fecha }} - {{ feriado.descripcion }}</span>
+                        <form method="post" action="{% url 'eliminar_feriado' feriado.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition-colors text-xs">Eliminar</button>
+                        </form>
+                    </li>
+                {% empty %}
+                    <li>No hay días feriados registrados.</li>
+                {% endfor %}
+            </ul>
+        </section>
+
+        <section>
+            <h2 class="text-xl font-bold mb-4">Cupones de Descuento</h2>
+            <form method="post" action="{% url 'agregar_cupon' %}" class="flex flex-col space-y-2">
+                {% csrf_token %}
+                <input type="text" name="code" placeholder="Código del cupón" required class="border rounded px-2 py-1">
+                <input type="number" name="discount_percentage" placeholder="Descuento (%)" required min="1" max="100" class="border rounded px-2 py-1">
+                <input type="date" name="valid_from" placeholder="Válido desde" required class="border rounded px-2 py-1">
+                <input type="date" name="valid_to" placeholder="Válido hasta" required class="border rounded px-2 py-1">
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors">Agregar Cupón</button>
+            </form>
+            
+            <h3 class="text-lg font-semibold mt-6 mb-2">Cupones Existentes</h3>
+            <ul>
+                {% for coupon in coupons %}
+                    <li class="flex items-center justify-between mb-2 p-2 bg-gray-50 rounded">
+                        <span>{{ coupon.code }} ({{ coupon.discount_percentage }}%) - {{ coupon.valid_from }} a {{ coupon.valid_to }} {% if not coupon.is_active %}<span class="text-red-500">(Inactivo)</span>{% endif %}</span>
+                        <form method="post" action="{% url 'eliminar_cupon' coupon.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition-colors text-xs">Eliminar</button>
+                        </form>
+                    </li>
+                {% empty %}
+                    <li>No hay cupones registrados.</li>
+                {% endfor %}
+            </ul>
+        </section>
+    </aside> {# End sidebar #}
+</body>
+</html>

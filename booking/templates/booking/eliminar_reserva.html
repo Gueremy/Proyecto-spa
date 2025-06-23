@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Eliminar Reserva</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+    <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #f9fafb; color: #333; margin: 0; padding: 32px; }
+    .admin-panel { max-width: 600px; margin: 0 auto; }
+    h1 { font-weight: 600; font-size: 1.5rem; margin-bottom: 24px; border-bottom: 1px solid #e5e7eb; padding-bottom: 12px; color: #111827; }
+    .confirm-card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px rgb(0 0 0 / 0.05); display: flex; flex-direction: column; gap: 16px; }
+    .actions { display: flex; gap: 16px; margin-top: 12px; }
+    button, .btn-link { display: inline-flex; align-items: center; gap: 6px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; padding: 10px 16px; font-size: 1rem; transition: background-color 0.3s ease; text-decoration: none;}
+    button { background-color: #fecaca; color: #b91c1c; }
+    button:hover { background-color: #fca5a5; }
+    .btn-link { background-color: #f3f4f6; color: #374151; }
+    .btn-link:hover { background-color: #e5e7eb; }
+    @media (max-width: 767px) { body { padding: 16px; } .admin-panel { max-width: 100%; } }
+    </style>
+</head>
+<body>
+<main class="admin-panel">
+    <h1>Eliminar Reserva</h1>
+    <div class="confirm-card">
+        <p>¿Seguro que deseas eliminar la reserva de <strong>{{ reserva.nombre }}</strong> para el <strong>{{ reserva.fecha }}</strong>?</p>
+        <form method="post" class="actions">
+            {% csrf_token %}
+            <button type="submit"><span class="material-icons">delete</span>Sí, eliminar</button>
+            <a href="{% url 'admin_panel' %}" class="btn-link"><span class="material-icons">arrow_back</span>Cancelar</a>
+        </form>
+    </div>
+</main>
+</body>
+</html>
